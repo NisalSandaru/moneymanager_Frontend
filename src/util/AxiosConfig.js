@@ -1,8 +1,8 @@
 import axios from "axios";
+import { BASE_URL } from "./ApiEndpoints";
 
 const axiosConfig = axios.create({
-  baseURL:
-    "https://springboot-moneymanager-project-production.up.railway.app/api/v1.0",
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -20,7 +20,7 @@ const excludeEndpoints = [
 axiosConfig.interceptors.request.use(
   (config) => {
     const shouldSkipToken = excludeEndpoints.some((endpoint) => {
-      config.url?.includes(endpoint);
+      return config.url?.includes(endpoint);
     });
 
     if (!shouldSkipToken) {
@@ -35,3 +35,23 @@ axiosConfig.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+axiosConfig.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      if (error.response.status === 401) {
+        window.location.href = "/login";
+      } else if (error.response.status === 500) {
+        console.error("Server error. Please try again later");
+      }
+    } else if (error.code === "ECONNABORTED") {
+      console.error("Request timeout. Please try again.");
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default axiosConfig;
